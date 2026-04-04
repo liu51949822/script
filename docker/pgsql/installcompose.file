@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: pgsql-server
+    restart: always
+    environment:
+      POSTGRES_USER: youradmin
+      POSTGRES_PASSWORD: your_secure_password
+      POSTGRES_DB: mydb
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./pgdata:/var/lib/postgresql/data
+      - ./pgconf/postgresql.conf:/etc/postgresql/postgresql.conf
+      - ./pgconf/pg_hba.conf:/etc/postgresql/pg_hba.conf
+    networks:
+      - pg-network
+    command: >
+      postgres -c config_file=/etc/postgresql/postgresql.conf
+               -c hba_file=/etc/postgresql/pg_hba.conf
+
+networks:
+  pg-network:
+    driver: bridge
