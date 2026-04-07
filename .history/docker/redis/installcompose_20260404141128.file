@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  redis:
+    image: redis:7.2
+    container_name: redis-server
+    restart: always
+    command: redis-server --requirepass ${REDIS_PASSWORD}
+    ports:
+      - "6379:6379"   # 开放 Redis 默认端口，允许远程连接
+    volumes:
+      - ./redis-data:/data          # 持久化数据
+      - ./redis.conf:/usr/local/etc/redis/redis.conf:ro  # 可选：自定义配置（见下方说明）
+    environment:
+      - REDIS_PASSWORD=your_strong_password_here  # ⚠️ 务必修改！
+    networks:
+      - redis-net
+
+networks:
+  redis-net:
+    driver: bridge
