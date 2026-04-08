@@ -1,0 +1,84 @@
+# .github/workflows/ci-cd.yml
+name: Next.js CI/CD
+
+on:
+  push:
+    branches: [ "main", "production" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [20.x]
+    
+    steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
+
+    - name: ⚙️ Setup Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'pnpm'
+
+    - name: 📦 Install pnpm
+      run: npm install -g pnpm
+
+    - name: 🔑 Setup environment variables
+      run: |
+        echo "DATABASE_URL=postgresql://test:test@localhost:5432/test" >> .env.test
+        echo "NEXT_PUBLIC_API_URL=http://localhost:3000" >> .env.test
+
+    - name: 🧪 Install dependencies
+      run: pnpm install --frozen-lockfile
+
+    - name: 🧹 Run ESLint
+      run: pnpm lint
+
+    - name: ✅ Run tests
+      run: pnpm test
+
+    - name: 🏗️ Build Next.js app
+      run: pnpm build
+
+    - name: 📤 Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: nextjs-build
+        path: |
+          .next
+          public
+          static
+
+  deploy:
+    needs: test-and-build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: 📥 Download build artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: nextjs-build
+        path: .
+
+    - name: 🚀 Deploy to Vercel
+      uses: amondnet/vercel-action@v25
+      with:
+        vercel-token: ${{ secrets.VERCEL_TOKEN }}
+        vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+        vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+        vercel-args: '--prod'
+
+    # 替代方案：部署到自托管服务器
+    # - name: 📤 Deploy to server
+    #   uses: appleboy/scp-action@v0.1.7
+    #   with:
+    #     host: ${{ secrets.HOST }}
+    #     username: ${{ secrets.USERNAME }}
+    #     key: ${{ secrets.KEY }}
+    #     source: ".next,public,static"
+    #     target: "/var/www/app"
