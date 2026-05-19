@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  jenkins:
+    image: jenkins/jenkins:lts-jdk17
+    container_name: jenkins-server
+    restart: always
+    user: root
+    environment:
+      JAVA_OPTS: -Djenkins.install.runSetupWizard=false
+    ports:
+      - "8080:8080"   # Web UI
+      - "50000:50000" # Agent communication
+    volumes:
+      - ./jenkins-data:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - jenkins-net
+
+networks:
+  jenkins-net:
+    driver: bridge

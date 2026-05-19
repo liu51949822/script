@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:7.0
+    container_name: mongodb-server
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: your_secure_password
+      MONGO_INITDB_DATABASE: mydb
+    ports:
+      - "27017:27017"
+    volumes:
+      - ./mongo-data:/data/db
+      - ./mongo-conf/mongod.conf:/etc/mongod.conf:ro
+    networks:
+      - mongo-net
+    command: mongod --auth --config /etc/mongod.conf
+
+networks:
+  mongo-net:
+    driver: bridge
