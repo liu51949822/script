@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  neo4j:
+    image: neo4j:5-community
+    container_name: neo4j-server
+    restart: always
+    environment:
+      NEO4J_AUTH: neo4j/your_secure_password
+      NEO4J_PLUGINS: '["apoc", "graph-data-science"]'
+      NEO4J_dbms_memory_pagecache_size: 512M
+      NEO4J_dbms_memory_heap_max__size: 1G
+    ports:
+      - "7474:7474"   # Browser UI
+      - "7687:7687"   # Bolt protocol
+    volumes:
+      - ./neo4j-data:/data
+      - ./neo4j-logs:/logs
+      - ./neo4j-import:/import
+      - ./neo4j-plugins:/plugins
+    networks:
+      - neo4j-net
+
+networks:
+  neo4j-net:
+    driver: bridge
