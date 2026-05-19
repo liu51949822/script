@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  couchdb:
+    image: couchdb:3.3
+    container_name: couchdb-server
+    restart: always
+    environment:
+      COUCHDB_USER: admin
+      COUCHDB_PASSWORD: your_secure_password
+    ports:
+      - "5984:5984"
+    volumes:
+      - ./couchdb-data:/opt/couchdb/data
+      - ./couchdb-conf:/opt/couchdb/etc/local.d
+    networks:
+      - couchdb-net
+
+networks:
+  couchdb-net:
+    driver: bridge

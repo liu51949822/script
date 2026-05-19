@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  superset:
+    image: apache/superset:latest
+    container_name: superset
+    restart: always
+    environment:
+      SUPERSET_SECRET_KEY: your_secret_key_change_me
+      SUPERSET__SQLALCHEMY_DATABASE_URI: postgresql+psycopg2://superset_user:your_db_password@postgres:5432/superset
+      SUPERSET__CELERY_RESULT_BACKEND: db+postgresql://superset_user:your_db_password@postgres:5432/superset
+    ports:
+      - "8088:8088"
+    volumes:
+      - ./superset-data:/app/superset_home
+    depends_on:
+      - postgres
+    networks:
+      - superset-net
+    command: >
+      sh -c "
+        superset fab create-admin --username admin --firstname Admin --lastname User --email admin@example.com --password your_admin_password;
+        superset db upgrade;
+        superset init;
+        superset run -p 8088 --with-threads --reload --debugger
+      "
+
+  postgres:
+    image: postgres:15
+    container_name: superset-db
+    restart: always
+    environment:
+      POSTGRES_USER: superset_user
+      POSTGRES_PASSWORD: your_db_password
+      POSTGRES_DB: superset
+    volumes:
+      - ./superset-db:/var/lib/postgresql/data
+    networks:
+      - superset-net
+
+networks:
+  superset-net:
+    driver: bridge

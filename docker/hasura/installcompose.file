@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: hasura-db
+    restart: always
+    environment:
+      POSTGRES_USER: hasura_user
+      POSTGRES_PASSWORD: your_db_password
+      POSTGRES_DB: hasura
+    volumes:
+      - ./hasura-db:/var/lib/postgresql/data
+    networks:
+      - hasura-net
+
+  hasura:
+    image: hasura/graphql-engine:v2.40
+    container_name: hasura
+    restart: always
+    depends_on:
+      - postgres
+    environment:
+      HASURA_GRAPHQL_DATABASE_URL: postgres://hasura_user:your_db_password@postgres:5432/hasura
+      HASURA_GRAPHQL_ENABLE_CONSOLE: "true"
+      HASURA_GRAPHQL_ADMIN_SECRET: your_admin_secret
+      HASURA_GRAPHQL_JWT_SECRET: '{"type":"HS256","key":"your_jwt_secret_key_change_me"}'
+      HASURA_GRAPHQL_UNAUTHORIZED_ROLE: anonymous
+    ports:
+      - "8085:8080"
+    networks:
+      - hasura-net
+
+networks:
+  hasura-net:
+    driver: bridge

@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  onlyoffice:
+    image: onlyoffice/documentserver:latest
+    container_name: onlyoffice
+    restart: always
+    environment:
+      JWT_ENABLED: "true"
+      JWT_SECRET: your_jwt_secret_change_me
+      JWT_HEADER: Authorization
+      ONLYOFFICE_HTTPS_HSTS_ENABLED: "false"
+    ports:
+      - "8083:80"
+      - "8084:443"
+    volumes:
+      - ./onlyoffice-data:/var/www/onlyoffice/Data
+      - ./onlyoffice-logs:/var/log/onlyoffice
+      - ./onlyoffice-lib:/var/lib/onlyoffice
+      - ./onlyoffice-db:/var/lib/postgresql
+    networks:
+      - oo-net
+    stdin_open: true
+    tty: true
+
+networks:
+  oo-net:
+    driver: bridge

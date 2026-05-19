@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  questdb:
+    image: questdb/questdb:latest
+    container_name: questdb-server
+    restart: always
+    environment:
+      QDB_PASSWORD: your_secure_password
+      QDB_CRYPTO_DEFAULT: bcrypt
+    ports:
+      - "9000:9000"   # Web Console
+      - "9009:9009"   # ILP / InfluxDB line protocol
+      - "8812:8812"   # PostgreSQL wire protocol
+    volumes:
+      - ./questdb-data:/var/lib/questdb
+      - ./questdb-conf:/var/lib/questdb/conf
+    networks:
+      - qdb-net
+
+networks:
+  qdb-net:
+    driver: bridge

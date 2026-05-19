@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  tdengine:
+    image: tdengine/tdengine:3.3
+    container_name: tdengine-server
+    restart: always
+    environment:
+      TAOS_ADMIN_PASSWORD: your_secure_password
+      TAOS_DEFAULT_USER: root
+      TZ: Asia/Shanghai
+    ports:
+      - "6030:6030"   # REST API
+      - "6041:6041"   # RESTful (HTTP)
+      - "6043:6043"   # Web Console
+      - "6060:6060"   # taosAdapter RPC
+    volumes:
+      - ./tdengine-data:/var/lib/taos
+      - ./tdengine-log:/var/log/taos
+      - ./tdengine-conf/taos.cfg:/etc/taos/taos.cfg:ro
+    networks:
+      - td-net
+    cap_add:
+      - SYS_RESOURCE
+
+networks:
+  td-net:
+    driver: bridge
