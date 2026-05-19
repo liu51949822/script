@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  keycloak:
+    image: quay.io/keycloak/keycloak:25.0
+    container_name: keycloak
+    restart: always
+    environment:
+      KC_HOSTNAME: localhost
+      KC_HTTP_PORT: 8080
+      KC_DB: postgres
+      KC_DB_URL_HOST: postgres
+      KC_DB_URL_PORT: 5432
+      KC_DB_URL_DATABASE: keycloak
+      KC_DB_USERNAME: keycloak_user
+      KC_DB_PASSWORD: your_db_password
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: your_admin_password
+    ports:
+      - "8080:8080"
+    command: start-dev
+    depends_on:
+      - postgres
+    networks:
+      - kc-net
+
+  postgres:
+    image: postgres:16
+    container_name: keycloak-db
+    restart: always
+    environment:
+      POSTGRES_USER: keycloak_user
+      POSTGRES_PASSWORD: your_db_password
+      POSTGRES_DB: keycloak
+    volumes:
+      - ./keycloak-db:/var/lib/postgresql/data
+    networks:
+      - kc-net
+
+networks:
+  kc-net:
+    driver: bridge

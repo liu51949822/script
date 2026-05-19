@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  metabase:
+    image: metabase/metabase:latest
+    container_name: metabase
+    restart: always
+    environment:
+      MB_DB_TYPE: postgres
+      MB_DB_DBNAME: metabase
+      MB_DB_PORT: 5432
+      MB_DB_USER: metabase_user
+      MB_DB_PASS: your_db_password
+      MB_DB_HOST: postgres
+      MB_ENCRYPTION_SECRET_KEY: your_encryption_key_change_me
+    ports:
+      - "3002:3000"
+    depends_on:
+      - postgres
+    networks:
+      - mb-net
+
+  postgres:
+    image: postgres:15
+    container_name: metabase-db
+    restart: always
+    environment:
+      POSTGRES_USER: metabase_user
+      POSTGRES_PASSWORD: your_db_password
+      POSTGRES_DB: metabase
+    volumes:
+      - ./metabase-db:/var/lib/postgresql/data
+    networks:
+      - mb-net
+
+networks:
+  mb-net:
+    driver: bridge

@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: redis-commander
+    restart: always
+    environment:
+      REDIS_HOSTS: local:redis:6379
+      REDIS_PASSWORD: your_redis_password
+    ports:
+      - "8081:8081"
+    networks:
+      - rc-net
+
+networks:
+  rc-net:
+    driver: bridge
