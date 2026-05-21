@@ -1,0 +1,38 @@
+# Docker data directories
+docker/*/pgdata/
+docker/*/mysql-data/
+docker/*/redis-data/
+docker/*/mongo-data/
+docker/*/es-data/
+docker/*/kafka-data/
+docker/*/*-data/
+docker/*/*-data/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+
+# Backups
+backups/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+docker/.env
+
+# Logs
+docker/*/logs/
+docker/*/*-logs/
+*.log

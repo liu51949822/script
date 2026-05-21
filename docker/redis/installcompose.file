@@ -13,6 +13,12 @@ services:
       - ./redis.conf:/usr/local/etc/redis/redis.conf:ro  # 可选：自定义配置（见下方说明）
     environment:
       - REDIS_PASSWORD=your_strong_password_here  # ⚠️ 务必修改！
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
     networks:
       - redis-net
 

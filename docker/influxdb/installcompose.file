@@ -17,6 +17,12 @@ services:
     volumes:
       - ./influxdb-data:/var/lib/influxdb2
       - ./influxdb-conf:/etc/influxdb2
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8086/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
     networks:
       - influxdb-net
 

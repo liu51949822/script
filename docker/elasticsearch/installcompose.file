@@ -16,6 +16,12 @@ services:
     volumes:
       - ./es-data:/usr/share/elasticsearch/data
       - ./es-conf/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml:ro
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f -u elastic:your_secure_password http://localhost:9200/_cluster/health || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
     networks:
       - es-net
     ulimits:
