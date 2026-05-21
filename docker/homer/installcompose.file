@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  homer:
+    image: b4bz/homer:latest
+    container_name: homer
+    restart: always
+    ports:
+      - "8085:8080"
+    volumes:
+      - ./homer-assets:/www/assets
+    networks:
+      - homer-net
+
+networks:
+  homer-net:
+    driver: bridge

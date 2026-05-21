@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  shlink:
+    image: shlinkio/shlink:latest
+    container_name: shlink
+    restart: always
+    environment:
+      DEFAULT_DOMAIN: localhost:8080
+      IS_HTTPS_ENABLED: "false"
+      INITIAL_API_KEY: your_api_key_change_me
+      DB_DRIVER: postgres
+      DB_HOST: shlink-db
+      DB_PORT: 5432
+      DB_NAME: shlink
+      DB_USER: shlink_user
+      DB_PASSWORD: your_db_password
+      GEOLITE_LICENSE_KEY: ""
+    ports:
+      - "8087:8080"
+    depends_on:
+      - shlink-db
+    networks:
+      - shlink-net
+
+  shlink-db:
+    image: postgres:15
+    container_name: shlink-db
+    restart: always
+    environment:
+      POSTGRES_USER: shlink_user
+      POSTGRES_PASSWORD: your_db_password
+      POSTGRES_DB: shlink
+    volumes:
+      - ./shlink-db:/var/lib/postgresql/data
+    networks:
+      - shlink-net
+
+networks:
+  shlink-net:
+    driver: bridge
