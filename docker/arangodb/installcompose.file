@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  arangodb:
+    image: arangodb:3.12
+    container_name: arangodb-server
+    restart: always
+    environment:
+      ARANGO_ROOT_PASSWORD: your_secure_password
+    ports:
+      - "8529:8529"
+    volumes:
+      - ./arango-data:/var/lib/arangodb3
+      - ./arango-apps:/var/lib/arangodb3-apps
+    networks:
+      - arango-net
+
+networks:
+  arango-net:
+    driver: bridge
