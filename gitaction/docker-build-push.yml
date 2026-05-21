@@ -1,0 +1,89 @@
+# =============================================================================
+# Docker 镜像构建与推送工作流
+# 功能：构建 Docker 镜像并推送到 Docker Hub / GHCR
+# 触发：push 到 main 分支，或手动触发
+# 使用前配置：Settings > Secrets 添加 DOCKERHUB_USERNAME, DOCKERHUB_TOKEN
+# =============================================================================
+
+name: Docker Build & Push
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - 'docker/**'           # 仅在 docker 目录有变更时触发
+      - '.github/workflows/docker-build-push.yml'
+  workflow_dispatch:           # 允许手动触发
+    inputs:
+      service:
+        description: '要构建的服务名（留空则构建所有变更的服务）'
+        required: false
+        type: string
+
+# 环境变量：定义需要构建的服务列表（键=目录名，值=Docker Hub 镜像名）
+env:
+  REGISTRY: docker.io          # 镜像仓库地址
+  IMAGE_PREFIX: ${{ secrets.DOCKERHUB_USERNAME }}
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # 第一步：检测哪些服务有变更
+  # ---------------------------------------------------------------------------
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      services: ${{ steps.changed.outputs.all_changed_files }}
+    steps:
+      - name: 📥 检出代码
+        uses: actions/checkout@v4
+
+      - name: 🔍 检测变更的服务
+        id: changed
+        uses: tj-actions/changed-files@v44
+        with:
+          files: |
+            docker/*/installcompose.file
+
+      - name: 📋 列出变更的服务
+        run: |
+          echo "变更的服务："
+          for file in ${{ steps.changed.outputs.all_changed_files }}; do
+            dir=$(dirname "$file" | xargs basename)
+            echo "  - $dir"
+          done
+
+  # ---------------------------------------------------------------------------
+  # 第二步：构建并推送每个变更服务的镜像
+  # ---------------------------------------------------------------------------
+  build-and-push:
+    needs: detect-changes
+    if: ${{ needs.detect-changes.outputs.services != '' }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [ "pgsql", "mysql", "redis", "nginx" ]  # 替换为实际需要构建的服务列表
+    steps:
+      - name: 📥 检出代码
+        uses: actions/checkout@v4
+
+      - name: 🔑 登录 Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: 🏗️ 构建并推送 ${{ matrix.service }} 镜像
+        run: |
+          cd docker/${{ matrix.service }}
+          docker compose -f installcompose.file build
+          docker tag ${{ matrix.service }}-server ${{ env.IMAGE_PREFIX }}/${{ matrix.service }}:latest
+          docker push ${{ env.IMAGE_PREFIX }}/${{ matrix.service }}:latest
+          echo "✅ ${{ matrix.service }} 镜像推送完成"
+
+      - name: 📊 构建摘要
+        if: always()
+        run: |
+          echo "### Docker 镜像构建结果" >> $GITHUB_STEP_SUMMARY
+          echo "| 服务 | 状态 |" >> $GITHUB_STEP_SUMMARY
+          echo "|------|------|" >> $GITHUB_STEP_SUMMARY
+          echo "| ${{ matrix.service }} | ${{ job.status }} |" >> $GITHUB_STEP_SUMMARY

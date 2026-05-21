@@ -1,0 +1,85 @@
+# =============================================================================
+# Docker Compose 文件验证工作流
+# 功能：自动验证所有 installcompose.file 的 YAML 语法和基本结构
+# 触发：PR 到 main 或手动触发
+# 要求：Python 3 + pyyaml
+# =============================================================================
+
+name: Docker Compose Validate
+
+on:
+  pull_request:
+    branches: [ "main" ]
+    paths:
+      - 'docker/**'                   # docker 目录变更时触发
+  push:
+    branches: [ "main" ]
+    paths:
+      - 'docker/**'
+  workflow_dispatch:                  # 允许手动触发
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    name: 🔍 验证 Docker Compose 文件
+    steps:
+      - name: 📥 检出代码
+        uses: actions/checkout@v4
+
+      - name: 🐍 安装 Python 依赖
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyyaml
+
+      # 验证 YAML 语法
+      - name: ✅ 验证 YAML 语法
+        run: |
+          echo "### Docker Compose 文件验证" >> $GITHUB_STEP_SUMMARY
+          ERROR_COUNT=0
+          for file in docker/*/installcompose.file; do
+            service_name=$(basename $(dirname "$file"))
+            if python -c "import yaml; yaml.safe_load(open('$file'))" 2>/dev/null; then
+              echo "  ✅ $service_name" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "  ❌ $service_name - YAML 语法错误" >> $GITHUB_STEP_SUMMARY
+              ERROR_COUNT=$((ERROR_COUNT + 1))
+            fi
+          done
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "总计: $ERROR_COUNT 个错误" >> $GITHUB_STEP_SUMMARY
+          if [ $ERROR_COUNT -gt 0 ]; then
+            echo "❌ 验证失败: 发现 $ERROR_COUNT 个语法错误"
+            exit 1
+          fi
+          echo "✅ 所有 Docker Compose 文件验证通过"
+
+      # 检查必需字段
+      - name: 📋 检查必需字段
+        run: |
+          echo "检查每个文件是否包含 services 和 networks..."
+          for file in docker/*/installcompose.file; do
+            service_name=$(basename $(dirname "$file"))
+            missing=""
+            grep -q "services:" "$file" || missing="services $missing"
+            grep -q "networks:" "$file" || missing="networks $missing"
+            if [ -n "$missing" ]; then
+              echo "⚠️  $service_name 缺少: $missing"
+            fi
+          done
+          echo "✅ 必需字段检查完成"
+
+      # 检测端口冲突
+      - name: 🔌 检测端口冲突
+        run: |
+          echo "检测 docker compose 文件中的端口冲突..."
+          PORTS=$(grep -rh '"\d\+:\d\+"' docker/*/installcompose.file 2>/dev/null | \
+                  sed 's/.*"\([0-9]*\):[0-9]*".*/\1/' | sort)
+          DUPLICATES=$(echo "$PORTS" | uniq -d)
+          if [ -n "$DUPLICATES" ]; then
+            echo "⚠️  发现端口冲突:"
+            echo "$DUPLICATES" | while read port; do
+              echo "  端口 $port 被多个服务使用"
+            done
+          else
+            echo "✅ 未发现端口冲突"
+          fi

@@ -1,0 +1,62 @@
+# 定时备份工作流
+# 功能：定期将仓库内容打包备份，上传到 Release 或其他存储
+# 触发：每周日 UTC 4:00 自动执行，也可手动触发
+
+name: Scheduled Backup
+
+on:
+  schedule:
+    - cron: '0 4 * * 0'         # 每周日凌晨4点 (UTC)
+  workflow_dispatch:
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: 📥 检出代码
+        uses: actions/checkout@v4
+
+      - name: 📦 创建备份压缩包
+        run: |
+          TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+          BACKUP_FILE="script-backup-${TIMESTAMP}.tar.gz"
+          tar czf "$BACKUP_FILE" \
+            --exclude='.git' \
+            --exclude='docker/*/*-data' \
+            --exclude='docker/*/*-db' \
+            --exclude='backups' \
+            docker/ base/ python/ gitaction/ mkfile.mk .gitignore
+          echo "BACKUP_FILE=$BACKUP_FILE" >> $GITHUB_ENV
+          echo "✅ 备份文件: $BACKUP_FILE ($(du -h $BACKUP_FILE | cut -f1))"
+
+      - name: 📤 上传备份到 Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: backup-${{ github.run_number }}
+          name: 自动备份 #${{ github.run_number }}
+          body: |
+            ## 📦 自动备份
+            - 日期: $(date +%Y-%m-%d)
+            - 来源: ${{ github.repository }}
+            - 分支: ${{ github.ref_name }}
+          files: ${{ env.BACKUP_FILE }}
+          draft: false
+          prerelease: true
+
+      # 清理旧备份 (保留最近5个)
+      - name: 🧹 清理旧备份
+        run: |
+          RELEASES=$(gh release list --json tagName --jq '.[].tagName' | grep "^backup-" | tail -n +6)
+          if [ -n "$RELEASES" ]; then
+            echo "清理旧备份:"
+            echo "$RELEASES" | while read tag; do
+              gh release delete "$tag" --cleanup-tag --yes
+              echo "  🗑️ $tag"
+            done
+          else
+            echo "无需清理 (备份数 ≤ 5)"
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

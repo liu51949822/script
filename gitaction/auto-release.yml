@@ -1,0 +1,36 @@
+# 自动发布版本工作流
+# 功能：push tag 时自动创建 GitHub Release，生成 changelog
+# 触发：推送 v* 格式的 tag
+
+name: Auto Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: 📥 检出代码
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 📋 生成 Changelog
+        id: changelog
+        uses: metcalfc/changelog-generator@v4
+        with:
+          myToken: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 🚀 创建 Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Release ${{ github.ref_name }}
+          body: ${{ steps.changelog.outputs.changelog }}
+          generate_release_notes: true
+          draft: false
+          prerelease: ${{ contains(github.ref_name, 'rc') || contains(github.ref_name, 'beta') || contains(github.ref_name, 'alpha') }}

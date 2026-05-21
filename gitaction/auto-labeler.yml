@@ -1,0 +1,23 @@
+# 自动标签工作流
+# 功能：根据 PR 内容自动添加标签，帮助分类和管理
+# 触发：PR 创建和更新
+
+name: Auto Labeler
+
+on:
+  pull_request_target:
+    types: [ opened, synchronize, reopened ]
+
+jobs:
+  label:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: 🏷️ 自动添加标签
+        uses: actions/labeler@v5
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          sync-labels: true
+          configuration-path: '.github/labeler.yml'

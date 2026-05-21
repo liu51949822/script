@@ -1,0 +1,67 @@
+# 安全审计工作流
+# 功能：检查提交中的敏感信息、依赖漏洞、代码安全
+# 触发：push 到 main / PR
+
+name: Security Audit
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  schedule:
+    - cron: '0 2 * * 1'          # 每周一 UTC 2:00
+  workflow_dispatch:
+
+jobs:
+  # 检查是否泄露了密钥/密码
+  gitleaks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 检出代码
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 🔍 扫描敏感信息泄露
+        uses: gitleaks/gitleaks-action@v2
+        with:
+          config-path: .gitleaks.toml
+        continue-on-error: true
+
+  # 检查 Docker Compose 文件中的硬编码密码
+  check-hardcoded-secrets:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 检出代码
+        uses: actions/checkout@v4
+
+      - name: 🔎 检查 compose 文件中的密码模式
+        run: |
+          echo "扫描 hardcoded 密码..."
+          FOUND=0
+          # 检查是否有未替换的示例密码
+          for file in docker/*/installcompose.file; do
+            if grep -qE "your_(root_|secure_|admin_|db_|user_|email_|strong_).*password" "$file"; then
+              FOUND=$((FOUND + 1))
+            fi
+          done
+          echo "📊 找到 $FOUND 个包含占位密码的文件"
+          echo "💡 提示: 部署前请将 'your_*_password' 替换为实际密码"
+
+  # 检查代码中的已知漏洞
+  codeql:
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+    steps:
+      - name: 📥 检出代码
+        uses: actions/checkout@v4
+
+      - name: 🔬 初始化 CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: python, javascript
+
+      - name: 🏗️ 执行分析
+        uses: github/codeql-action/analyze@v3
