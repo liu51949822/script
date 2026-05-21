@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+"""简易 HTTP 服务器 — 一行命令启动静态文件 HTTP 服务 (开发调试用)
+用法: python quick-http.py                  # 默认 8000 端口
+      python quick-http.py -p 3000          # 指定端口
+      python quick-http.py -d ./build       # 指定根目录"""
 import http.server, socketserver, os, sys, argparse
 
 def main():

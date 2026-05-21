@@ -1,4 +1,9 @@
 #!/bin/bash
+# 代码统计脚本 — 按编程语言统计文件数和代码行数
+# 用法: ./code-stats.sh [目录]
+# 统计类型: .sh .py .js .ts .yml .json .md .html .css .sql
+# 附带 Git 提交统计 (提交数、贡献者排行)
+
 set -euo pipefail
 
 DIR="${1:-.}"

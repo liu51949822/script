@@ -1,4 +1,10 @@
 #!/bin/bash
+# 项目脚手架 — 快速初始化不同技术栈的新项目
+# 用法: ./new-project.sh <项目名> [类型]
+# 类型: python, node, go, docker, basic (默认 basic)
+# 示例: ./new-project.sh my-api python
+# 自动创建目录结构、基础配置文件和 .gitignore
+
 set -euo pipefail
 
 PROJECT_NAME="${1:-}"

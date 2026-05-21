@@ -1,4 +1,9 @@
 #!/usr/bin/env python3
+"""开发常用文本工具集 — UUID生成 / Base64编解码 / 哈希计算 / 大小写转换
+用法: python text-tools.py uuid                    # 生成 UUID
+      python text-tools.py sha256 "hello"           # SHA256 哈希
+      python text-tools.py b64enc "test"            # Base64 编码
+      echo "hello" | python text-tools.py md5       # 管道输入"""
 import sys, random, string, hashlib, base64, textwrap, argparse
 
 def gen_uuid(): return f"{random.randint(0,0xffffffff):08x}-{random.randint(0,0xffff):04x}-{random.randint(0,0xffff):04x}-{random.randint(0,0xffff):04x}-{random.randint(0,0xffffffffffff):012x}"

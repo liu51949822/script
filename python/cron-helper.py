@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+"""Cron 表达式工具 — 解析、验证、列出常用 Cron 表达式示例
+用法: python cron-helper.py "*/5 * * * *"
+      python cron-helper.py -l              # 列出所有常用示例"""
 import argparse, datetime
 
 CRON_FIELDS = ['分钟', '小时', '日', '月', '星期']

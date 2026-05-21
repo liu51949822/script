@@ -1,4 +1,8 @@
 #!/bin/bash
+# Git 一键同步脚本 — 拉取远端、同步当前分支、清理已合并分支
+# 用法: ./git-sync.sh
+# 功能: fetch 远程更新 → pull 当前分支 → 删除本地已合并分支 → 显示仓库状态
+
 set -euo pipefail
 
 echo "=== Git Sync ==="

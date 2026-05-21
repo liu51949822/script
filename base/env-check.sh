@@ -1,4 +1,8 @@
 #!/bin/bash
+# 开发环境检查脚本 — 检测常用开发工具是否已安装及版本
+# 用法: ./env-check.sh
+# 检查项: Git, Docker, Python3, Node.js, Go, pip3, npm, VS Code 等
+
 set -euo pipefail
 
 echo "=== 开发环境检查 ==="

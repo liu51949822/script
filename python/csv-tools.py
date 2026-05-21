@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+"""CSV ↔ JSON 互转工具 — 双向转换支持自定义分隔符
+用法: python csv-tools.py data.csv              # CSV → JSON
+      python csv-tools.py data.json -r           # JSON → CSV
+      python csv-tools.py data.csv -d ';'        # 指定分隔符"""
 import csv, json, sys, argparse, io
 
 def csv_to_json(input_file, output_file=None, delimiter=','):

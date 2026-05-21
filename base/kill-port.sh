@@ -1,4 +1,9 @@
 #!/bin/bash
+# 端口释放脚本 — 查找占用指定端口的进程并安全终止
+# 用法: ./kill-port.sh <端口号>
+# 示例: ./kill-port.sh 8080
+# 不带参数时列出当前所有监听端口
+
 set -euo pipefail
 
 PORT="${1:-}"

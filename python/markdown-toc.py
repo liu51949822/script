@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+"""Markdown 目录生成器 — 从 Markdown 文件中提取标题生成 TOC
+用法: python markdown-toc.py README.md
+输出: 可复制到 README 中的目录锚点链接"""
 import sys, re, os
 
 def generate_toc(filepath):
