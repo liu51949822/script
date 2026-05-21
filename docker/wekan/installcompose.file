@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  wekan:
+    image: wekanteam/wekan:latest
+    container_name: wekan
+    restart: always
+    environment:
+      MONGO_URL: mongodb://wekan-db:27017/wekan
+      ROOT_URL: http://localhost:8081
+      WITH_API: "true"
+      MAIL_URL: ""
+    ports:
+      - "8081:8080"
+    depends_on:
+      - wekan-db
+    networks:
+      - wekan-net
+
+  wekan-db:
+    image: mongo:7.0
+    container_name: wekan-db
+    restart: always
+    volumes:
+      - ./wekan-db:/data/db
+    networks:
+      - wekan-net
+
+networks:
+  wekan-net:
+    driver: bridge

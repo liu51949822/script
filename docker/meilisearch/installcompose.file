@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  meilisearch:
+    image: getmeili/meilisearch:latest
+    container_name: meilisearch-server
+    restart: always
+    environment:
+      MEILI_MASTER_KEY: your_master_key_change_me
+      MEILI_ENV: production
+    ports:
+      - "7700:7700"
+    volumes:
+      - ./meili-data:/meili_data
+    networks:
+      - meili-net
+
+networks:
+  meili-net:
+    driver: bridge

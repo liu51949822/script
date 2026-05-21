@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  vaultwarden:
+    image: vaultwarden/server:latest
+    container_name: vaultwarden
+    restart: always
+    environment:
+      DOMAIN: http://localhost:8084
+      ADMIN_TOKEN: your_admin_token_change_me
+      SIGNUPS_ALLOWED: "true"
+      WEBSOCKET_ENABLED: "true"
+    ports:
+      - "8084:80"
+      - "3012:3012"
+    volumes:
+      - ./vaultwarden-data:/data
+    networks:
+      - vw-net
+
+networks:
+  vw-net:
+    driver: bridge

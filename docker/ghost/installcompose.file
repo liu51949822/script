@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  ghost:
+    image: ghost:5-alpine
+    container_name: ghost
+    restart: always
+    environment:
+      database__client: mysql
+      database__connection__host: mysql
+      database__connection__user: ghost_user
+      database__connection__password: your_db_password
+      database__connection__database: ghost
+      url: http://localhost:2368
+    ports:
+      - "2368:2368"
+    volumes:
+      - ./ghost-content:/var/lib/ghost/content
+    depends_on:
+      - mysql
+    networks:
+      - ghost-net
+
+  mysql:
+    image: mysql:8.0
+    container_name: ghost-db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: your_root_password
+      MYSQL_DATABASE: ghost
+      MYSQL_USER: ghost_user
+      MYSQL_PASSWORD: your_db_password
+    volumes:
+      - ./ghost-db:/var/lib/mysql
+    networks:
+      - ghost-net
+
+networks:
+  ghost-net:
+    driver: bridge

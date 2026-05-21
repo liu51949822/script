@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  cassandra:
+    image: cassandra:5.0
+    container_name: cassandra-server
+    restart: always
+    environment:
+      CASSANDRA_CLUSTER_NAME: mycluster
+      CASSANDRA_DC: datacenter1
+      CASSANDRA_RACK: rack1
+      CASSANDRA_ENDPOINT_SNITCH: GossipingPropertyFileSnitch
+    ports:
+      - "9042:9042"   # CQL native transport
+      - "7000:7000"   # Internode communication
+    volumes:
+      - ./cassandra-data:/var/lib/cassandra
+    networks:
+      - cassandra-net
+
+networks:
+  cassandra-net:
+    driver: bridge

@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  paperless-ngx:
+    image: ghcr.io/paperless-ngx/paperless-ngx:latest
+    container_name: paperless-ngx
+    restart: always
+    environment:
+      PAPERLESS_SECRET_KEY: your_secret_key_change_me
+      PAPERLESS_ADMIN_USER: admin
+      PAPERLESS_ADMIN_PASSWORD: your_admin_password
+      PAPERLESS_URL: http://localhost:8000
+      PAPERLESS_DBENGINE: sqlite
+      PAPERLESS_TIKA_ENABLED: "true"
+      PAPERLESS_TIKA_GOTENBERG_ENDPOINT: http://gotenberg:3000
+      PAPERLESS_TIKA_ENDPOINT: http://tika:9998
+      PAPERLESS_REDIS: redis://redis:6379
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./paperless-data:/usr/src/paperless/data
+      - ./paperless-media:/usr/src/paperless/media
+      - ./paperless-export:/usr/src/paperless/export
+      - ./paperless-consume:/usr/src/paperless/consume
+    depends_on:
+      - redis
+    networks:
+      - paperless-net
+
+  redis:
+    image: redis:7.2
+    container_name: paperless-redis
+    restart: always
+    networks:
+      - paperless-net
+
+networks:
+  paperless-net:
+    driver: bridge
