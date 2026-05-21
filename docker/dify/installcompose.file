@@ -1,0 +1,100 @@
+version: '3.8'
+
+services:
+  dify-web:
+    image: langgenius/dify-web:latest
+    container_name: dify-web
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      CONSOLE_API_URL: http://dify-api:5001
+      APP_API_URL: http://dify-api:5001
+    depends_on:
+      - dify-api
+    networks:
+      - dify-net
+
+  dify-api:
+    image: langgenius/dify-api:latest
+    container_name: dify-api
+    restart: always
+    environment:
+      MODE: api
+      LOG_LEVEL: INFO
+      SECRET_KEY: your_secret_key_change_me
+      SQLALCHEMY_DATABASE_URI: postgresql://dify_user:your_db_password@dify-db:5432/dify
+      REDIS_URL: redis://dify-redis:6379/0
+      CELERY_BROKER_URL: redis://dify-redis:6379/0
+      STORAGE_TYPE: local
+      STORAGE_LOCAL_PATH: storage
+      VECTOR_STORE: weaviate
+      WEAVIATE_ENDPOINT: http://dify-weaviate:8080
+    ports:
+      - "5001:5001"
+    volumes:
+      - ./dify-storage:/app/api/storage
+    depends_on:
+      - dify-db
+      - dify-redis
+    networks:
+      - dify-net
+
+  dify-worker:
+    image: langgenius/dify-api:latest
+    container_name: dify-worker
+    restart: always
+    environment:
+      MODE: worker
+      LOG_LEVEL: INFO
+      SECRET_KEY: your_secret_key_change_me
+      SQLALCHEMY_DATABASE_URI: postgresql://dify_user:your_db_password@dify-db:5432/dify
+      REDIS_URL: redis://dify-redis:6379/0
+      CELERY_BROKER_URL: redis://dify-redis:6379/0
+      STORAGE_TYPE: local
+      STORAGE_LOCAL_PATH: storage
+    volumes:
+      - ./dify-storage:/app/api/storage
+    depends_on:
+      - dify-db
+      - dify-redis
+    networks:
+      - dify-net
+
+  dify-db:
+    image: postgres:16
+    container_name: dify-db
+    restart: always
+    environment:
+      POSTGRES_USER: dify_user
+      POSTGRES_PASSWORD: your_db_password
+      POSTGRES_DB: dify
+    volumes:
+      - ./dify-db:/var/lib/postgresql/data
+    networks:
+      - dify-net
+
+  dify-redis:
+    image: redis:7-alpine
+    container_name: dify-redis
+    restart: always
+    networks:
+      - dify-net
+
+  dify-weaviate:
+    image: semitechnologies/weaviate:latest
+    container_name: dify-weaviate
+    restart: always
+    environment:
+      AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: "true"
+      PERSISTENCE_DATA_PATH: /var/lib/weaviate
+      DEFAULT_VECTORIZER_MODULE: none
+      ENABLE_MODULES: ""
+    volumes:
+      - ./dify-weaviate:/var/lib/weaviate
+    networks:
+      - dify-net
+
+networks:
+  dify-net:
+    driver: bridge

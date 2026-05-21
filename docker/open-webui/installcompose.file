@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:main
+    container_name: open-webui
+    restart: always
+    environment:
+      OLLAMA_BASE_URL: http://ollama:11434
+      WEBUI_SECRET_KEY: your_secret_key_change_me
+    ports:
+      - "3000:8080"
+    volumes:
+      - ./webui-data:/app/backend/data
+    depends_on:
+      - ollama
+    networks:
+      - webui-net
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama-webui
+    restart: always
+    environment:
+      OLLAMA_HOST: 0.0.0.0
+    ports:
+      - "11434:11434"
+    volumes:
+      - ./ollama-data:/root/.ollama
+    networks:
+      - webui-net
+
+networks:
+  webui-net:
+    driver: bridge
