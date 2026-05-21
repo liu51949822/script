@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  mattermost:
+    image: mattermost/mattermost-team-edition:latest
+    container_name: mattermost
+    restart: always
+    environment:
+      MM_USERNAME: mattermost
+      MM_DBNAME: mattermost
+      MM_PASSWORD: your_db_password
+      MM_SQLSETTINGS_DRIVERNAME: postgres
+      MM_SQLSETTINGS_DATASOURCE: postgres://mmuser:your_db_password@mattermost-db:5432/mattermost?sslmode=disable
+    ports:
+      - "8065:8065"
+    volumes:
+      - ./mm-data:/mattermost/data
+      - ./mm-config:/mattermost/config
+      - ./mm-plugins:/mattermost/plugins
+    depends_on:
+      - mattermost-db
+    networks:
+      - mm-net
+
+  mattermost-db:
+    image: postgres:15
+    container_name: mattermost-db
+    restart: always
+    environment:
+      POSTGRES_USER: mmuser
+      POSTGRES_PASSWORD: your_db_password
+      POSTGRES_DB: mattermost
+    volumes:
+      - ./mm-db:/var/lib/postgresql/data
+    networks:
+      - mm-net
+
+networks:
+  mm-net:
+    driver: bridge

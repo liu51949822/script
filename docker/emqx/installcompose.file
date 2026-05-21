@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  emqx:
+    image: emqx/emqx:latest
+    container_name: emqx
+    restart: always
+    environment:
+      EMQX_NAME: emqx
+      EMQX_HOST: 127.0.0.1
+      EMQX_DASHBOARD__DEFAULT_USERNAME: admin
+      EMQX_DASHBOARD__DEFAULT_PASSWORD: your_admin_password
+    ports:
+      - "1883:1883"   # MQTT
+      - "8883:8883"   # MQTT/SSL
+      - "8083:8083"   # WebSocket
+      - "8084:8084"   # WebSocket/SSL
+      - "18083:18083" # Dashboard
+    volumes:
+      - ./emqx-data:/opt/emqx/data
+      - ./emqx-logs:/opt/emqx/log
+      - ./emqx-etc:/opt/emqx/etc
+    networks:
+      - emqx-net
+
+networks:
+  emqx-net:
+    driver: bridge

@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  node-red:
+    image: nodered/node-red:latest
+    container_name: node-red
+    restart: always
+    environment:
+      TZ: Asia/Shanghai
+    ports:
+      - "1880:1880"
+    volumes:
+      - ./node-red-data:/data
+    networks:
+      - nr-net
+
+networks:
+  nr-net:
+    driver: bridge
