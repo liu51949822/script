@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  directus:
+    image: directus/directus:latest
+    container_name: directus
+    restart: always
+    environment:
+      KEY: your_key_change_me
+      SECRET: your_secret_change_me
+      ADMIN_EMAIL: admin@example.com
+      ADMIN_PASSWORD: your_admin_password
+      DB_CLIENT: postgres
+      DB_HOST: directus-db
+      DB_PORT: 5432
+      DB_DATABASE: directus
+      DB_USER: directus_user
+      DB_PASSWORD: your_db_password
+    ports:
+      - "8055:8055"
+    volumes:
+      - ./directus-uploads:/directus/uploads
+    depends_on:
+      - directus-db
+    networks:
+      - directus-net
+
+  directus-db:
+    image: postgres:16
+    container_name: directus-db
+    restart: always
+    environment:
+      POSTGRES_USER: directus_user
+      POSTGRES_PASSWORD: your_db_password
+      POSTGRES_DB: directus
+    volumes:
+      - ./directus-db:/var/lib/postgresql/data
+    networks:
+      - directus-net
+
+networks:
+  directus-net:
+    driver: bridge

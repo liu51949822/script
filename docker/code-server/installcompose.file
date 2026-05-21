@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  code-server:
+    image: linuxserver/code-server:latest
+    container_name: code-server
+    restart: always
+    environment:
+      PUID: 1000
+      PGID: 1000
+      TZ: Asia/Shanghai
+      PASSWORD: your_access_password
+      SUDO_PASSWORD: your_sudo_password
+    ports:
+      - "8443:8443"
+    volumes:
+      - ./code-server-data:/config
+      - ./projects:/projects
+    networks:
+      - cs-net
+
+networks:
+  cs-net:
+    driver: bridge

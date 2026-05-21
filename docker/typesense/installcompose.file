@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  typesense:
+    image: typesense/typesense:27.0
+    container_name: typesense
+    restart: always
+    environment:
+      TYPESENSE_API_KEY: your_api_key_change_me
+      TYPESENSE_DATA_DIR: /data
+      TYPESENSE_ENABLE_CORS: "true"
+    ports:
+      - "8108:8108"
+    volumes:
+      - ./typesense-data:/data
+    networks:
+      - ts-net
+
+networks:
+  ts-net:
+    driver: bridge

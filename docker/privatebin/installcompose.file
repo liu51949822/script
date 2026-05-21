@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  privatebin:
+    image: privatebin/nginx-fpm-alpine:latest
+    container_name: privatebin
+    restart: always
+    ports:
+      - "8088:8080"
+    volumes:
+      - ./privatebin-data:/data
+      - ./privatebin-cfg:/srv/cfg
+    networks:
+      - pb-net
+
+networks:
+  pb-net:
+    driver: bridge
