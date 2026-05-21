@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  linkding:
+    image: sissbruecker/linkding:latest
+    container_name: linkding
+    restart: always
+    environment:
+      LD_SUPERUSER_NAME: admin
+      LD_SUPERUSER_PASSWORD: your_admin_password
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./linkding-data:/etc/linkding/data
+    networks:
+      - ld-net
+
+networks:
+  ld-net:
+    driver: bridge

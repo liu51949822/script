@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  it-tools:
+    image: corentinth/it-tools:latest
+    container_name: it-tools
+    restart: always
+    ports:
+      - "8086:80"
+    networks:
+      - itt-net
+
+networks:
+  itt-net:
+    driver: bridge

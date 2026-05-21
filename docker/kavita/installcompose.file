@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  kavita:
+    image: jvmilazz0/kavita:latest
+    container_name: kavita
+    restart: always
+    environment:
+      TZ: Asia/Shanghai
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./kavita-data:/kavita/config
+      - ./comics:/comics
+      - ./manga:/manga
+    networks:
+      - kavita-net
+
+networks:
+  kavita-net:
+    driver: bridge

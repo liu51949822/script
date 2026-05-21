@@ -1,0 +1,69 @@
+version: '3.8'
+
+services:
+  plane-web:
+    image: makeplane/plane-frontend:latest
+    container_name: plane-web
+    restart: always
+    ports:
+      - "3006:3000"
+    networks:
+      - plane-net
+
+  plane-api:
+    image: makeplane/plane-backend:latest
+    container_name: plane-api
+    restart: always
+    environment:
+      DATABASE_URL: postgres://plane_user:your_db_password@plane-db/plane
+      REDIS_URL: redis://plane-redis:6379/
+      SECRET_KEY: your_secret_key_change_me
+      DEBUG: "0"
+    ports:
+      - "8002:8000"
+    volumes:
+      - ./plane-logs:/code/logs
+    depends_on:
+      - plane-db
+      - plane-redis
+    networks:
+      - plane-net
+
+  plane-worker:
+    image: makeplane/plane-backend:latest
+    container_name: plane-worker
+    restart: always
+    environment:
+      DATABASE_URL: postgres://plane_user:your_db_password@plane-db/plane
+      REDIS_URL: redis://plane-redis:6379/
+      SECRET_KEY: your_secret_key_change_me
+    command: celery -A plane worker -l INFO
+    depends_on:
+      - plane-db
+      - plane-redis
+    networks:
+      - plane-net
+
+  plane-db:
+    image: postgres:16
+    container_name: plane-db
+    restart: always
+    environment:
+      POSTGRES_USER: plane_user
+      POSTGRES_PASSWORD: your_db_password
+      POSTGRES_DB: plane
+    volumes:
+      - ./plane-db:/var/lib/postgresql/data
+    networks:
+      - plane-net
+
+  plane-redis:
+    image: redis:7-alpine
+    container_name: plane-redis
+    restart: always
+    networks:
+      - plane-net
+
+networks:
+  plane-net:
+    driver: bridge
