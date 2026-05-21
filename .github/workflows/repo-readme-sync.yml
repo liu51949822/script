@@ -1,0 +1,53 @@
+# =============================================================================
+# 仓库 README 自动同步工作流
+# 功能：当 docker 目录变更时，自动运行 index-generator.py 更新 README
+# 触发：push 到 main 且 docker/ 目录有变更
+# =============================================================================
+
+name: Auto Update README
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - 'docker/*/installcompose.file'     # compose 文件变更时触发
+      - 'docker/README.md'
+      - 'python/index-generator.py'
+  workflow_dispatch:                         # 允许手动触发
+
+jobs:
+  update-readme:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write                        # 需要写入权限来提交 README
+    name: 📝 自动更新 README
+    steps:
+      - name: 📥 检出代码
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: 🐍 安装 Python 依赖
+        run: pip install pyyaml
+
+      - name: 🔄 生成 README
+        run: |
+          python python/index-generator.py
+          echo "### README 更新" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          cat docker/README.md >> $GITHUB_STEP_SUMMARY
+
+      # 检查是否有变更，有则自动提交
+      - name: 📤 提交更新
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add docker/README.md
+          if git diff --cached --quiet; then
+            echo "README 无变更，跳过提交"
+          else
+            git commit -m "📝 自动更新 README [skip ci]"
+            git push
+            echo "✅ README 已自动更新并推送"
+          fi

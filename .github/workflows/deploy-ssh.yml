@@ -1,0 +1,60 @@
+# SSH 远程部署工作流
+# 功能：通过 SSH 部署到远程服务器，执行更新脚本
+# 使用前配置：Settings > Secrets 添加 HOST, USERNAME, KEY, PORT
+
+name: Deploy via SSH
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: '部署环境'
+        required: true
+        type: choice
+        options:
+          - production
+          - staging
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment || 'production' }}
+    steps:
+      - name: 📥 检出代码
+        uses: actions/checkout@v4
+
+      - name: 📤 同步文件到服务器
+        uses: easingthemes/ssh-deploy@v5
+        with:
+          SSH_PRIVATE_KEY: ${{ secrets.KEY }}
+          REMOTE_HOST: ${{ secrets.HOST }}
+          REMOTE_USER: ${{ secrets.USERNAME }}
+          REMOTE_PORT: ${{ secrets.PORT || '22' }}
+          SOURCE: "."
+          TARGET: "/opt/scripts"
+          ARGS: "-avz --delete"
+
+      - name: 🔄 远程执行更新脚本
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.KEY }}
+          port: ${{ secrets.PORT || '22' }}
+          script: |
+            cd /opt/scripts
+            echo "=== 重新部署 Docker 服务 ==="
+            bash base/compose-up.sh --all
+            echo "=== 健康检查 ==="
+            bash base/health-check.sh
+
+      - name: 📊 部署摘要
+        if: always()
+        run: |
+          echo "### 🚀 部署结果" >> $GITHUB_STEP_SUMMARY
+          echo "| 项目 | 状态 |" >> $GITHUB_STEP_SUMMARY
+          echo "|------|------|" >> $GITHUB_STEP_SUMMARY
+          echo "| 文件同步 | ${{ steps.deploy.outcome }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 服务重启 | ${{ steps.restart.outcome }} |" >> $GITHUB_STEP_SUMMARY
