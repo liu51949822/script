@@ -1,6 +1,6 @@
 # Docker Compose 脚本集合
 
-> 共 92 个服务配置 | 每个目录包含 `installcompose.file`
+> 共 95 个服务配置 | 每个目录包含 `installcompose.file`
 
 ## 分类索引
 
