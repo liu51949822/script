@@ -1,0 +1,19 @@
+# NocoDB - 开源 Airtable 替代品
+#
+# 安装: docker compose up -d
+# 访问: http://localhost:8080
+# 默认: 首次访问配置管理员账号
+
+services:
+  nocodb:
+    image: nocodb/nocodb:latest
+    container_name: nocodb
+    ports:
+      - "8080:8080"
+      - "8081:8081"
+    volumes:
+      - ./data:/usr/app/data
+    restart: unless-stopped
+    environment:
+      - NC_AUTH_JWT_SECRET=change-me-to-random-string
+      - NC_PUBLIC_URL=http://localhost:8080

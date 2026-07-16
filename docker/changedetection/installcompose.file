@@ -1,0 +1,26 @@
+# Changedetection - 网站变更监控
+#
+# 安装: docker compose up -d
+# 访问: http://localhost:5000
+
+services:
+  changedetection:
+    image: ghcr.io/dgtlmoon/changedetection.io:latest
+    container_name: changedetection
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./data:/datastore
+    restart: unless-stopped
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - BASE_URL=http://localhost:5000
+      - PLAYWRIGHT_DRIVER_URL=ws://playwright-chrome:3000
+
+  playwright-chrome:
+    image: ghcr.io/browserless/chromium:latest
+    container_name: changedetection-browser
+    expose:
+      - "3000"
+    restart: unless-stopped
