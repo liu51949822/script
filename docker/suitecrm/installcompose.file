@@ -1,0 +1,16 @@
+# suitecrm - 开源 CRM 客户管理系统
+#
+# 安装: docker compose up -d
+# 访问: http://localhost:8080
+# 生成日期: 2026-07-24
+
+services:
+  suitecrm:
+    image: bitnami/suitecrm:latest
+    container_name: suitecrm
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./data:/data
+    restart: unless-stopped
+

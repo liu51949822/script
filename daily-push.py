@@ -11,7 +11,7 @@ import os
 import sys
 import subprocess
 import random
-from datetime import date
+from datetime import date, datetime
 from pathlib import Path
 
 REPO_DIR = Path(r"E:\openclaw\script-repo")
@@ -248,7 +248,7 @@ if __name__ == "__main__":
 ]
 
 
-def push_to_github(token):
+def push_to_github(token, p):
     """提交并推送到 GitHub"""
     os.chdir(REPO_DIR)
     env = os.environ.copy()
@@ -261,31 +261,44 @@ def push_to_github(token):
     # 提交
     r = subprocess.run(["git", "add", "-A"], cwd=REPO_DIR, capture_output=True)
     if r.returncode != 0:
-        print(f"git add 失败: {r.stderr.decode()}")
+        p(f"git add 失败: {r.stderr.decode()}")
         return False
 
     r = subprocess.run(["git", "diff", "--cached", "--quiet"], cwd=REPO_DIR, capture_output=True)
     if r.returncode == 0:
-        print("没有新内容需要提交")
+        p("没有新内容需要提交")
         return True
 
     commit_msg = f"daily push {TODAY}"
     r = subprocess.run(["git", "commit", "-m", commit_msg], cwd=REPO_DIR, capture_output=True)
     if r.returncode != 0:
-        print(f"git commit 失败: {r.stderr.decode()}")
+        p(f"git commit 失败: {r.stderr.decode()}")
         return False
 
     r = subprocess.run(["git", "push", "origin", "main"], cwd=REPO_DIR, capture_output=True, env=env)
     if r.returncode != 0:
-        print(f"git push 失败: {r.stderr.decode()}")
+        p(f"git push 失败: {r.stderr.decode()}")
         return False
 
-    print(f"✅ 成功推送至 GitHub: {commit_msg}")
+    p(f"✅ 成功推送至 GitHub: {commit_msg}")
     return True
 
 
 def main():
-    print(f"📅 每日推送 - {TODAY}")
+    import sys
+    # 重定向输出到文件确保能看到
+    logfile = Path(__file__).parent / "push-output.log"
+    with open(logfile, "a", encoding="utf-8") as log:
+        def p(msg):
+            print(f"[{datetime.now().strftime('%H:%M:%S')}] {msg}")
+            log.write(f"[{datetime.now().strftime('%H:%M:%S')}] {msg}\n")
+            log.flush()
+        sys.stdout = log
+        sys.stderr = log
+        _main(p)
+
+def _main(p):
+    p(f"📅 每日推送 - {TODAY}")
     token = os.environ.get("GITHUB_TOKEN", "")
 
     # 选择今天要生成的内容 (随机选 <= MAX_FILES 个)
@@ -297,20 +310,23 @@ def main():
         filepath.parent.mkdir(parents=True, exist_ok=True)
         filepath.write_text(item["content"], encoding="utf-8")
         created.append(item["path"])
-        print(f"  📝 创建: {item['path']}")
+        p(f"  📝 创建: {item['path']}")
 
     if not token:
-        print("\n⚠️  未设置 GITHUB_TOKEN，文件已生成但未推送")
-        print(f"   已创建 {len(created)} 个文件:")
+        p("")
+        p("⚠️  未设置 GITHUB_TOKEN，文件已生成但未推送")
+        p(f"   已创建 {len(created)} 个文件:")
         for f in created:
-            print(f"    - {f}")
-        print("\n   设置环境变量后重新运行即可推送:")
-        print("   $env:GITHUB_TOKEN=\"your_token\"")
-        print("   python daily-push.py")
+            p(f"    - {f}")
+        p("")
+        p("   设置环境变量后重新运行即可推送:")
+        p("   $env:GITHUB_TOKEN=\"your_token\"")
+        p("   python daily-push.py")
         return
 
-    print(f"\n  📤 推送到 GitHub...")
-    push_to_github(token)
+    p("")
+    p("  📤 推送到 GitHub...")
+    push_to_github(token, p)
 
 
 if __name__ == "__main__":

@@ -1,0 +1,16 @@
+# opengist - 轻量 Git Snippets
+#
+# 安装: docker compose up -d
+# 访问: http://localhost:6150
+# 生成日期: 2026-07-24
+
+services:
+  opengist:
+    image: ghcr.io/thomiceli/opengist:latest
+    container_name: opengist
+    ports:
+      - "6150:6150"
+    volumes:
+      - ./data:/data
+    restart: unless-stopped
+

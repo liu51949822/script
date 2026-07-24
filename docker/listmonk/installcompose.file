@@ -1,0 +1,16 @@
+# listmonk - 开源邮件营销平台
+#
+# 安装: docker compose up -d
+# 访问: http://localhost:9000
+# 生成日期: 2026-07-24
+
+services:
+  listmonk:
+    image: listmonk/listmonk:latest
+    container_name: listmonk
+    ports:
+      - "9000:9000"
+    volumes:
+      - ./data:/data
+    restart: unless-stopped
+

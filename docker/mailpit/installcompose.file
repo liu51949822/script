@@ -1,0 +1,16 @@
+# mailpit - 开发邮件测试工具
+#
+# 安装: docker compose up -d
+# 访问: http://localhost:8025
+# 生成日期: 2026-07-23
+
+services:
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: mailpit
+    ports:
+      - "8025:8025"
+    volumes:
+      - ./data:/data
+    restart: unless-stopped
+
