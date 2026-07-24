@@ -249,14 +249,13 @@ if __name__ == "__main__":
 
 
 def push_to_github(token, p):
-    """提交并推送到 GitHub"""
+    """提交并推送到 GitHub (使用 HTTPS + PAT)"""
     os.chdir(REPO_DIR)
-    env = os.environ.copy()
-    env["GIT_SSH_COMMAND"] = f"ssh -i {Path.home() / '.ssh' / 'script_repo_key'} -o StrictHostKeyChecking=no"
 
-    # 添加远程 SSH
-    subprocess.run(["git", "remote", "set-url", "origin",
-                    "git@github.com:liu51949822/script.git"], cwd=REPO_DIR, capture_output=True)
+    # 使用 HTTPS + PAT 避免 SSH key 依赖
+    auth_url = f"https://oauth2:{token}@github.com/liu51949822/script.git"
+    subprocess.run(["git", "remote", "set-url", "origin", auth_url],
+                   cwd=REPO_DIR, capture_output=True)
 
     # 提交
     r = subprocess.run(["git", "add", "-A"], cwd=REPO_DIR, capture_output=True)
@@ -275,11 +274,15 @@ def push_to_github(token, p):
         p(f"git commit 失败: {r.stderr.decode()}")
         return False
 
-    r = subprocess.run(["git", "push", "origin", "main"], cwd=REPO_DIR, capture_output=True, env=env)
+    r = subprocess.run(["git", "push", "origin", "main"], cwd=REPO_DIR, capture_output=True)
     if r.returncode != 0:
         p(f"git push 失败: {r.stderr.decode()}")
         return False
 
+    # 推完后切回 HTTPS 无凭证 URL，避免 token 残留
+    subprocess.run(["git", "remote", "set-url", "origin",
+                    "https://github.com/liu51949822/script.git"],
+                   cwd=REPO_DIR, capture_output=True)
     p(f"✅ 成功推送至 GitHub: {commit_msg}")
     return True
 
