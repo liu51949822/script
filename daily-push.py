@@ -249,40 +249,41 @@ if __name__ == "__main__":
 
 
 def push_to_github(token, p):
-    """提交并推送到 GitHub (使用 HTTPS + PAT)"""
+    """提交并推送到 GitHub (使用 SSH key)"""
     os.chdir(REPO_DIR)
 
-    # 使用 HTTPS + PAT 避免 SSH key 依赖
-    auth_url = f"https://oauth2:{token}@github.com/liu51949822/script.git"
-    subprocess.run(["git", "remote", "set-url", "origin", auth_url],
+    # 使用 SSH key (公司网络屏蔽 HTTPS)
+    subprocess.run(["git", "remote", "set-url", "origin",
+                    "git@github.com:liu51949822/script.git"],
                    cwd=REPO_DIR, capture_output=True)
 
+    # Windows 下 Path.home() 返回 Posix 风格路径，必须用正斜杠
+    ssh_key = Path.home().as_posix() + "/.ssh/script_repo_key"
+    env = os.environ.copy()
+    env["GIT_SSH_COMMAND"] = f"ssh -i {ssh_key} -o StrictHostKeyChecking=no"
+
     # 提交
-    r = subprocess.run(["git", "add", "-A"], cwd=REPO_DIR, capture_output=True)
+    r = subprocess.run(["git", "add", "-A"], cwd=REPO_DIR, capture_output=True, env=env)
     if r.returncode != 0:
         p(f"git add 失败: {r.stderr.decode()}")
         return False
 
-    r = subprocess.run(["git", "diff", "--cached", "--quiet"], cwd=REPO_DIR, capture_output=True)
+    r = subprocess.run(["git", "diff", "--cached", "--quiet"], cwd=REPO_DIR, capture_output=True, env=env)
     if r.returncode == 0:
         p("没有新内容需要提交")
         return True
 
     commit_msg = f"daily push {TODAY}"
-    r = subprocess.run(["git", "commit", "-m", commit_msg], cwd=REPO_DIR, capture_output=True)
+    r = subprocess.run(["git", "commit", "-m", commit_msg], cwd=REPO_DIR, capture_output=True, env=env)
     if r.returncode != 0:
         p(f"git commit 失败: {r.stderr.decode()}")
         return False
 
-    r = subprocess.run(["git", "push", "origin", "main"], cwd=REPO_DIR, capture_output=True)
+    r = subprocess.run(["git", "push", "origin", "main"], cwd=REPO_DIR, capture_output=True, env=env)
     if r.returncode != 0:
         p(f"git push 失败: {r.stderr.decode()}")
         return False
 
-    # 推完后切回 HTTPS 无凭证 URL，避免 token 残留
-    subprocess.run(["git", "remote", "set-url", "origin",
-                    "https://github.com/liu51949822/script.git"],
-                   cwd=REPO_DIR, capture_output=True)
     p(f"✅ 成功推送至 GitHub: {commit_msg}")
     return True
 
@@ -303,6 +304,15 @@ def main():
 def _main(p):
     p(f"📅 每日推送 - {TODAY}")
     token = os.environ.get("GITHUB_TOKEN", "")
+    if not token:
+        try:
+            import json as _json
+            cfg_path = Path.home() / ".openclaw" / "openclaw.json"
+            if cfg_path.exists():
+                cfg = _json.loads(cfg_path.read_text(encoding="utf-8"))
+                token = cfg.get("env", {}).get("GITHUB_TOKEN", "")
+        except Exception:
+            pass
 
     # 选择今天要生成的内容 (随机选 <= MAX_FILES 个)
     selected = random.sample(CONTENT_POOL, min(MAX_FILES, len(CONTENT_POOL)))
