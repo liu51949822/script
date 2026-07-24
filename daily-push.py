@@ -262,8 +262,8 @@ def push_to_github(token, p):
     env = os.environ.copy()
     env["GIT_SSH_COMMAND"] = f"ssh -i {ssh_key} -o StrictHostKeyChecking=no"
 
-    # 先拉取远端最新代码
-    r = subprocess.run(["git", "pull", "--rebase", "origin", "main"],
+    # 先拉取远端最新代码 (自动 stash 未提交的改动)
+    r = subprocess.run(["git", "pull", "--rebase", "--autostash", "origin", "main"],
                        cwd=REPO_DIR, capture_output=True, env=env, timeout=30)
     if r.returncode != 0:
         p(f"git pull 警告: {r.stderr.decode()}")
