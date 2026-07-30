@@ -322,7 +322,7 @@ def _main(p):
                         token = cfg.get("env", {}).get("GITHUB_TOKEN", "")
                         if token:
                             break
-                    except (UnicodeDecodeError, json.JSONDecodeError):
+                    except (UnicodeDecodeError, _json.JSONDecodeError):
                         continue
         except Exception:
             pass
