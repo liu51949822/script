@@ -315,8 +315,15 @@ def _main(p):
             import json as _json
             cfg_path = Path.home() / ".openclaw" / "openclaw.json"
             if cfg_path.exists():
-                cfg = _json.loads(cfg_path.read_text(encoding="utf-8"))
-                token = cfg.get("env", {}).get("GITHUB_TOKEN", "")
+                for enc in ("utf-8", "utf-8-sig", "gbk", "gb2312", sys.getdefaultencoding()):
+                    try:
+                        text = cfg_path.read_text(encoding=enc)
+                        cfg = _json.loads(text)
+                        token = cfg.get("env", {}).get("GITHUB_TOKEN", "")
+                        if token:
+                            break
+                    except (UnicodeDecodeError, json.JSONDecodeError):
+                        continue
         except Exception:
             pass
 
